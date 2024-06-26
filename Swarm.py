@@ -66,3 +66,16 @@ def multi_swarm_pso(num_swarms, pop_size_per_swarm, num_iterations, dim, bounds)
                 best_global_particle = particle
     
     return best_global_particle.position, best_global_fitness
+
+
+# Parameters
+num_swarms = 3
+pop_size_per_swarm = 20
+num_iterations = 100
+dim = 5
+bounds = (-5, 5)
+
+# Run multi-swarm PSO
+best_solution, best_solution_fitness = multi_swarm_pso(num_swarms, pop_size_per_swarm, num_iterations, dim, bounds)
+print("Best solution found:", best_solution)
+print("Objective value:", best_solution_fitness)
