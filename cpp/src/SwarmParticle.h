@@ -3,6 +3,7 @@
 
 #include "Particle.h"
 
+#include <memory>
 
 template< size_t __NUM_PARAMS, typename __PARAM_T = double, typename __FITNESS_T = double >
 class SwarmParticle : public Particle< __NUM_PARAMS, __PARAM_T, __FITNESS_T >
@@ -20,13 +21,13 @@ public:
     // Constructor
     SwarmParticle()
         : Base()
-        , globalBestFitness_{ nullptr }
+        , velocity_{ static_cast< param_t >( 0 ) }
+        , bestParticle_{ nullptr }
         , inertia_{ DEFAULT_INERTIA }
         , cognitive_{ DEFAULT_COGNITIVE }
         , social_{ DEFAULT_SOCIAL }
     {
-        std::memset( velocity_, 0, Base::NUM_PARAMS * sizeof( param_t ) );
-        std::memset( bestPosition_, 0, Base::NUM_PARAMS * sizeof( param_t ) );
+        std::memset( velocity_, static_cast< param_t >( 0 ), Base::NUM_PARAMS * sizeof( param_t ) );
     }
 
     // Destructor
@@ -35,13 +36,13 @@ public:
     // Copy constructor
     SwarmParticle( const SwarmParticle& other )
         : Base( other )
-        , globalBestFitness_{ other.globalBestFitness_ }
+        , velocity_{ other.velocity_}
+        , bestParticle_{ other.bestParticle_ }
         , inertia_{ other.inertia_ }
         , cognitive_{ other.cognitive_ }
         , social_{ other.social_ }
     {
         std::memcpy( velocity_, other.velocity_, Base::NUM_PARAMS * sizeof( param_t ) );
-        std::memcpy( bestPosition_, other.bestPosition_, Base::NUM_PARAMS * sizeof( param_t ) );
     }
 
     // Assignment operator
@@ -54,7 +55,7 @@ public:
             std::memcpy( velocity_, other.velocity_, Base::NUM_PARAMS * sizeof( param_t ) );
             std::memcpy( bestPosition_, other.bestPosition_, Base::NUM_PARAMS * sizeof( param_t ) );
 
-            globalBestFitness_ = other.globalBestFitness_;
+            bestParticle_ = other.bestParticle_;
 
             inertia_   = other.inertia_;
             cognitive_ = other.cognitive_;
@@ -74,8 +75,7 @@ protected:
 
     param_t bestPosition_[Base::NUM_PARAMS];
 
-    param_t* globalBestPosition_;
-    fitness_t* globalBestFitness_;
+    std::shared_ptr< BestParticle< Base::NUM_PARAMS, param_t, fitness_t > > bestParticle_;
 
     param_t inertia_;
     param_t cognitive_;

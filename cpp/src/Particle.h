@@ -23,7 +23,7 @@ public:
         : position_{}
         , fitness_{ std::numeric_limits< fitness_t >::max() }
     {
-        std::memset( position_, 0, NUM_PARAMS * sizeof( param_t ) );
+        std::memset( position_, static_cast< param_t >( 0 ), NUM_PARAMS * sizeof( param_t ) );
     }
 
 
@@ -117,7 +117,7 @@ public:
     using Base::operator<=;
 
 
-    bool testParticle( const Base& particle )
+    bool trialParticle( const Base& particle )
     {
         if ( particle < *this )
         {
@@ -126,6 +126,23 @@ public:
         }
 
         return false;
+    }
+
+
+    template< size_t __NUM_PARTICLES >
+    bool trialParticle( const Base particles[__NUM_PARTICLES] )
+    {
+        bool updated = false;
+
+        for ( size_t i = 0; i < __NUM_PARTICLES; ++i )
+        {
+            if ( trialParticle( particles[i] ) )
+            {
+                updated = true;
+            }
+        }
+
+        return updated;
     }
 
 
