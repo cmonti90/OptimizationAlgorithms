@@ -3,34 +3,36 @@
 
 #include <cstddef>
 #include <cstring>
+#include <limits>
 
-template< size_t __NUM_PARAMS__, typename __PARAM_T__ = double, typename __FITNESS_T__ = double >
+
+template< size_t __NUM_PARAMS, typename __PARAM_T = double, typename __FITNESS_T = double >
+class BestParticle;
+
+template< size_t __NUM_PARAMS, typename __PARAM_T = double, typename __FITNESS_T = double >
 class Particle
 {
 public:
 
-    static constexpr size_t NUM_PARAMS = __NUM_PARAMS__;
-    typedef __PARAM_T__ param_t;
-    typedef __FITNESS_T__ fitness_t;
+    using param_t = __PARAM_T;
+    using fitness_t = __FITNESS_T;
+
+    static constexpr size_t NUM_PARAMS = __NUM_PARAMS;
 
     inline Particle()
         : position_{}
-        , bestPosition_{}
-        , bestFitness_{ 0.0 }
+        , fitness_{ std::numeric_limits< fitness_t >::max() }
     {
         std::memset( position_, 0, NUM_PARAMS * sizeof( param_t ) );
-        std::memset( bestPosition_, 0, NUM_PARAMS * sizeof( param_t ) );
     }
 
 
     // Constructor and destructor
     inline Particle( const param_t position[NUM_PARAMS] )
         : position_{}
-        , bestPosition_{}
-        , bestFitness_{ 0.0 }
+        , fitness_{ std::numeric_limits< fitness_t >::max() }
     {
         std::memcpy( position_, position, NUM_PARAMS * sizeof( param_t ) );
-        std::memcpy( bestPosition_, position, NUM_PARAMS * sizeof( param_t ) );
     }
 
 
@@ -39,11 +41,9 @@ public:
     // Copy constructor
     inline Particle( const Particle& other )
         : position_{}
-        , bestPosition_{}
-        , bestFitness_{ other.bestFitness_ }
+        , fitness_{ other.fitness_ }
     {
         std::memcpy( position_, other.position_, NUM_PARAMS * sizeof( param_t ) );
-        std::memcpy( bestPosition_, other.bestPosition_, NUM_PARAMS * sizeof( param_t ) );
     }
 
 
@@ -53,9 +53,7 @@ public:
         if ( this != &other )
         {
             std::memcpy( position_, other.position_, NUM_PARAMS * sizeof( param_t ) );
-            std::memcpy( bestPosition_, other.bestPosition_, NUM_PARAMS * sizeof( param_t ) );
-
-            bestFitness_ = other.bestFitness_;
+            fitness_ = other.fitness_;
         }
 
         return *this;
@@ -75,32 +73,62 @@ public:
     }
 
 
-    inline void getBestPosition( param_t position[NUM_PARAMS] ) const
-    {
-        for ( size_t i = 0; i < NUM_PARAMS; i++ )
-        {
-            position[i] = bestPosition_[i];
-        }
-    }
+    inline fitness_t getFitness() const { return fitness_; };
 
-
-    inline void setBestPosition( const param_t position[NUM_PARAMS] )
-    {
-        std::memcpy( bestPosition_, position, NUM_PARAMS * sizeof( param_t ) );
-    }
-
-
-    inline param_t getBestFitness() const { return bestFitness_; }
-    inline void setBestFitness( param_t fitness ) { bestFitness_ = fitness; }
+    inline bool operator==( const Particle& other ) const { return fitness_ == other.fitness_; }
+    inline bool operator!=( const Particle& other ) const { return fitness_ != other.fitness_; }
+    inline bool operator>( const Particle& other ) const { return fitness_ > other.fitness_; }
+    inline bool operator<( const Particle& other ) const { return fitness_ < other.fitness_; }
+    inline bool operator>=( const Particle& other ) const { return fitness_ >= other.fitness_; }
+    inline bool operator<=( const Particle& other ) const { return fitness_ <= other.fitness_; }
 
 protected:
-    // Declare member variables here
 
     param_t position_[NUM_PARAMS];
-
-    param_t bestPosition_[NUM_PARAMS];
-    fitness_t bestFitness_;
+    fitness_t fitness_;
 
 }; // class Particle
+
+
+template< size_t __NUM_PARAMS, typename __PARAM_T, typename __FITNESS_T >
+class BestParticle : protected Particle< __NUM_PARAMS, __PARAM_T, __FITNESS_T >
+{
+public:
+
+    using Base = Particle< __NUM_PARAMS, __PARAM_T, __FITNESS_T >;
+    using param_t = __PARAM_T;
+    using fitness_t = __FITNESS_T;
+
+    BestParticle()
+        : Base{}
+    {}
+
+    virtual ~BestParticle() {}
+
+    // const param_t* const getPosition() const { return &position_; }
+    // const fitness_t* const getFitness() const { return &fitness_; }
+
+    using Base::operator=;
+    using Base::operator==;
+    using Base::operator!=;
+    using Base::operator>;
+    using Base::operator<;
+    using Base::operator>=;
+    using Base::operator<=;
+
+
+    bool testParticle( const Base& particle )
+    {
+        if ( particle < *this )
+        {
+            *this = particle;
+            return true;
+        }
+
+        return false;
+    }
+
+
+}; // class BestParticle
 
 #endif // PARTICLE_H

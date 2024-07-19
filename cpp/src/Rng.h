@@ -10,6 +10,6 @@ public:
     ~Rng();
 
     double getUniform();
-}
+}; // class Rng
 
 #endif // RNG_H

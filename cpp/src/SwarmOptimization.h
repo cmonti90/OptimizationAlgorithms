@@ -4,15 +4,15 @@
 #include "OptimizationAlg.cpp"
 
 
-template< size_t __NUM_PARTICLES__, typename __PARTICLE_T__ >
-class SwarmOptimization : public OptimizationAlg< __NUM_PARTICLES__, __PARTICLE_T__ >
+template< size_t __NUM_PARTICLES, typename __PARTICLE_T >
+class SwarmOptimization : public OptimizationAlg< __NUM_PARTICLES, __PARTICLE_T >
 {
 public:
     // Constructor
     SwarmOptimization();
 
     // Destructor
-    ~SwarmOptimization();
+    virtual ~SwarmOptimization();
 
     // Public member functions
 

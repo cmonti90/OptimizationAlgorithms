@@ -3,18 +3,19 @@
 
 #include <cstddef>
 
-template< size_t __NUM_PARICLES__, typename __PARICLE_T__ >
+template< size_t __NUM_PARICLES, typename __PARICLE_T >
 class OptimizationAlg
 {
 public:
     static constexpr size_t DEFAULT_MAX_ITERATIONS = 50;
 
-    static constexpr size_t NUM_PARTICLES = __NUM_PARICLES__;
-    typedef __PARICLE_T__ particle_t;
+    static constexpr size_t NUM_PARTICLES = __NUM_PARICLES;
+    typedef __PARICLE_T particle_t;
 
 
     OptimizationAlg()
-        : iteration_{ 0 }
+        : particles_{}
+        , iteration_{ 0 }
         , maxIterations_{ DEFAULT_MAX_ITERATIONS }
         , seed_{ 0 }
     {
@@ -28,11 +29,11 @@ public:
     {
         initializeParticles();
 
-        for( size_t i = 0; i < maxIterations_; i++ )
+        for( uint64_t i = 0; i < maxIterations_; i++ )
         {
             iterate();
 
-            if( isConverged() )
+            if ( isConverged() )
             {
                 break;
             }
@@ -41,7 +42,7 @@ public:
     }
 
 
-    void setMaxIterations( const size_t maxIterations ) 
+    void setMaxIterations( const uint64_t maxIterations ) 
     {
         maxIterations_ = maxIterations;
     }
@@ -71,8 +72,8 @@ private:
 
     particle_t particles_[NUM_PARTICLES];
 
-    size_t iteration_;
-    size_t maxIterations_;
+    uint64_t iteration_;
+    uint64_t maxIterations_;
 
     uint64_t seed_;
 

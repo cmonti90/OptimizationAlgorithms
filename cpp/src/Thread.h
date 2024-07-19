@@ -2,13 +2,13 @@
 #define THREAD_H
 
 
-// #include <pthread.h>
+#include <pthread.h>
 
 
-namespace Thread
+class Thread
 {
-    extern void sayHello();
-}
+    
+}; // class Thread
 
 
 #endif // THREAD_H
