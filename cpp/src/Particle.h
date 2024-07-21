@@ -7,9 +7,6 @@
 
 
 template< size_t __NUM_PARAMS, typename __PARAM_T = double, typename __FITNESS_T = double >
-class BestParticle;
-
-template< size_t __NUM_PARAMS, typename __PARAM_T = double, typename __FITNESS_T = double >
 class Particle
 {
 public:
@@ -19,6 +16,7 @@ public:
 
     static constexpr size_t NUM_PARAMS = __NUM_PARAMS;
 
+    // Constructor
     inline Particle()
         : position_{}
         , fitness_{ std::numeric_limits< fitness_t >::max() }
@@ -27,18 +25,11 @@ public:
     }
 
 
-    // Constructor and destructor
-    inline Particle( const param_t position[NUM_PARAMS] )
-        : position_{}
-        , fitness_{ std::numeric_limits< fitness_t >::max() }
-    {
-        std::memcpy( position_, position, NUM_PARAMS * sizeof( param_t ) );
-    }
-
-
+    // Destructor
     inline virtual ~Particle() {}
 
-    // Copy constructor
+
+    // Copy Constructor
     inline Particle( const Particle& other )
         : position_{}
         , fitness_{ other.fitness_ }
@@ -60,16 +51,10 @@ public:
     }
 
 
-    // Declare member functions here
-    inline void getPosition( param_t position[NUM_PARAMS] ) const
-    {
-        std::memcpy( position, position_, NUM_PARAMS * sizeof( param_t ) );
-    }
-
-
-    inline void setPosition( const param_t position[NUM_PARAMS] )
+    inline void initialize( const param_t position[NUM_PARAMS] )
     {
         std::memcpy( position_, position, NUM_PARAMS * sizeof( param_t ) );
+        fitness_ = std::numeric_limits< fitness_t >::max();
     }
 
 
@@ -82,16 +67,16 @@ public:
     inline bool operator>=( const Particle& other ) const { return fitness_ >= other.fitness_; }
     inline bool operator<=( const Particle& other ) const { return fitness_ <= other.fitness_; }
 
-protected:
-
     param_t position_[NUM_PARAMS];
     fitness_t fitness_;
+
 
 }; // class Particle
 
 
-template< size_t __NUM_PARAMS, typename __PARAM_T, typename __FITNESS_T >
-class BestParticle : protected Particle< __NUM_PARAMS, __PARAM_T, __FITNESS_T >
+
+template< size_t __NUM_PARAMS, typename __PARAM_T = double, typename __FITNESS_T = double >
+class BestParticle : public Particle< __NUM_PARAMS, __PARAM_T, __FITNESS_T >
 {
 public:
 
@@ -104,9 +89,6 @@ public:
     {}
 
     virtual ~BestParticle() {}
-
-    // const param_t* const getPosition() const { return &position_; }
-    // const fitness_t* const getFitness() const { return &fitness_; }
 
     using Base::operator=;
     using Base::operator==;
@@ -130,7 +112,7 @@ public:
 
 
     template< size_t __NUM_PARTICLES >
-    bool trialParticle( const Base particles[__NUM_PARTICLES] )
+    bool trialParticle( const Base ( &particles )[__NUM_PARTICLES] )
     {
         bool updated = false;
 
