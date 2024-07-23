@@ -1,32 +1,48 @@
 #ifndef OPTIMIZATIONALG_H
 #define OPTIMIZATIONALG_H
 
+#include "Particle.h"
+
 #include <cstddef>
 #include <functional>
 
-template< size_t __NUM_PARICLES, typename __PARICLE_T >
+#include <iostream>
+
+template<size_t __NUM_PARTICLES, typename __PARTICLE_T,
+         typename = typename std::enable_if<
+             std::is_base_of<
+                 Particle<__PARTICLE_T::NUM_PARAMS, typename __PARTICLE_T::param_t, typename __PARTICLE_T::fitness_t>,
+                 __PARTICLE_T
+                 >::value
+             >::type>
 class OptimizationAlg
 {
-    static_assert( __NUM_PARICLES > 0, "Number of particles must be greater than 0" );
-    static_assert( std::is_base_of< Particle< __PARICLE_T::NUM_PARAMS, typename __PARICLE_T::param_t, typename __PARICLE_T::fitness_t >, __PARICLE_T >::value, "Particle type must be derived from Particle" );
-
 public:
+
+    static_assert( __NUM_PARTICLES > 0, "Number of particles must be greater than 0" );
+
+
     static constexpr size_t DEFAULT_MAX_ITERATIONS = 50;
 
-    static constexpr size_t NUM_PARTICLES = __NUM_PARICLES;
-    using particle_t = __PARICLE_T;
+    static constexpr size_t NUM_PARTICLES = __NUM_PARTICLES;
+
+    using particle_t = __PARTICLE_T;
+    static constexpr size_t NUM_PARAMS = particle_t::NUM_PARAMS;
     using param_t = typename particle_t::param_t;
     using fitness_t = typename particle_t::fitness_t;
 
 
-    OptimizationAlg()
-        : particles_{}
-        , bestParticle_{ std::make_shared< BestParticle< NUM_PARTICLES, param_t, fitness_t > >() }
+    OptimizationAlg( const param_t lowerBound[NUM_PARAMS], const param_t upperBound[NUM_PARAMS] )
+        : upperBound_{}
+        , lowerBound_{}
+        , particles_{}
+        , bestParticle_{ std::make_shared< BestParticle< particle_t > >() }
         , iteration_{ 0 }
         , maxIterations_{ DEFAULT_MAX_ITERATIONS }
-        , seed_{ 0 }
         , fitnessFunc_{ nullptr }
     {
+        std::memcpy( upperBound_, upperBound, NUM_PARAMS * sizeof( param_t ) );
+        std::memcpy( lowerBound_, lowerBound, NUM_PARAMS * sizeof( param_t ) );
     }
 
 
@@ -37,6 +53,24 @@ public:
     {
         initializeParticles();
 
+        postInitialize();
+
+        evaluateParticles();
+        updateBestParticle();
+
+        std::cout << "Initial best particle position: [";
+
+        for ( size_t i = 0; i < NUM_PARAMS; ++i )
+        {
+            std::cout << bestParticle_->position_[i] << ( i < NUM_PARAMS - 1 ? ", " : "" );
+        }
+
+        std::cout << "]" << std::endl;
+
+        std::cout << "Initial best particle fitness: " << bestParticle_->fitness_ << std::endl;
+
+        std::cout << "/////////////////////////" << std::endl;
+
         for ( iteration_ = 0; iteration_ < maxIterations_; ++iteration_ )
         {
             iterate();
@@ -46,6 +80,18 @@ public:
                 break;
             }
         }
+
+        std::cout << "Best particle position: [";
+
+        for ( size_t i = 0; i < NUM_PARAMS; ++i )
+        {
+            std::cout << bestParticle_->position_[i] << ( i < NUM_PARAMS - 1 ? ", " : "" );
+        }
+
+        std::cout << "]" << std::endl;
+
+        std::cout << "Best particle fitness: " << bestParticle_->fitness_ << std::endl;
+
     }
 
 
@@ -55,27 +101,25 @@ public:
     }
 
 
-    void setSeed( const uint64_t seed )
-    {
-        seed_ = seed;
-    }
-
-
     void setFitnessFunc( std::function< fitness_t( particle_t& ) > fitnessFunc )
     {
         fitnessFunc_ = fitnessFunc;
     }
 
+
     virtual void updateParticles() = 0;
+
 
 protected:
 
-    particle_t particles_[NUM_PARTICLES];
-    
-    param_t* upperBound_;
-    param_t* lowerBound_;
+    virtual void postInitialize() {}
 
-    std::shared_ptr< BestParticle< NUM_PARTICLES, param_t, fitness_t > > bestParticle_;
+    param_t upperBound_[NUM_PARAMS];
+    param_t lowerBound_[NUM_PARAMS];
+
+    particle_t particles_[NUM_PARTICLES];
+
+    std::shared_ptr< BestParticle< particle_t > > bestParticle_;
 
 private:
 
@@ -83,7 +127,7 @@ private:
     {
         for ( size_t i = 0; i < NUM_PARTICLES; ++i )
         {
-            particles_[i].initialize();
+            particles_[i].initialize( lowerBound_, upperBound_ );
         }
     }
 
@@ -96,12 +140,14 @@ private:
         }
     }
 
+
     virtual void iterate()
     {
         updateParticles();
         evaluateParticles();
         updateBestParticle();
     }
+
 
     virtual bool isConverged() { return false; };
 
@@ -111,10 +157,9 @@ private:
         this->bestParticle_->trialParticle( particles_ );
     }
 
+
     uint64_t iteration_;
     uint64_t maxIterations_;
-
-    uint64_t seed_;
 
     std::function< fitness_t( particle_t& ) > fitnessFunc_;
 

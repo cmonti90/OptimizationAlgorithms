@@ -51,19 +51,25 @@ public:
         return *this;
     }
 
-    operator Particle< __NUM_PARAMS, __PARAM_T, __FITNESS_T >() const
+    // operator Particle< __NUM_PARAMS, __PARAM_T, __FITNESS_T >() const
+    // {
+    //     Particle< __NUM_PARAMS, __PARAM_T, __FITNESS_T > p;
+
+    //     std::memcpy( p.position_, Base::position_, Base::NUM_PARAMS * sizeof( param_t ) );
+    //     p.fitness_ = Base::fitness_;
+
+    //     return p;
+    // }
+
+    // operator Particle< __NUM_PARAMS, __PARAM_T, __FITNESS_T >& ()
+    // {
+    //     return *this;
+    // }
+
+
+    void setBestParticle( const std::shared_ptr< SwarmParticle >& bestParticle )
     {
-        Particle< __NUM_PARAMS, __PARAM_T, __FITNESS_T > p;
-
-        std::memcpy( p.position_, Base::position_, Base::NUM_PARAMS * sizeof( param_t ) );
-        p.fitness_ = Base::fitness_;
-
-        return p;
-    }
-
-    operator Particle< __NUM_PARAMS, __PARAM_T, __FITNESS_T >& ()
-    {
-        return *this;
+        bestParticle_ = bestParticle;
     }
 
 
@@ -73,7 +79,7 @@ public:
 
 protected:
 
-    std::shared_ptr< BestParticle< Base::NUM_PARAMS, param_t, fitness_t > > bestParticle_;
+    std::shared_ptr< SwarmParticle > bestParticle_;
 
 
 }; // class SwarmParticle

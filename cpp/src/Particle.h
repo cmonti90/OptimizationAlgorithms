@@ -1,9 +1,13 @@
 #ifndef PARTICLE_H
 #define PARTICLE_H
 
+#include "Rng.h"
+
 #include <cstddef>
 #include <cstring>
 #include <limits>
+
+#include <iostream>
 
 
 template< size_t __NUM_PARAMS, typename __PARAM_T = double, typename __FITNESS_T = double >
@@ -51,10 +55,30 @@ public:
     }
 
 
-    inline void initialize( const param_t position[NUM_PARAMS] )
+    inline void initialize( const param_t lowerBounds[NUM_PARAMS], const param_t upperBounds[NUM_PARAMS] )
     {
-        std::memcpy( position_, position, NUM_PARAMS * sizeof( param_t ) );
-        fitness_ = std::numeric_limits< fitness_t >::max();
+        Rng<>* rng = Rng<>::getInstance();
+
+        for ( size_t i = 0; i < NUM_PARAMS; ++i )
+        {
+            position_[i] = rng->drawUniform( lowerBounds[i], upperBounds[i] );
+        }
+    }
+
+
+    inline void clip( const param_t lowerBounds[NUM_PARAMS], const param_t upperBounds[NUM_PARAMS] )
+    {
+        for ( size_t i = 0; i < NUM_PARAMS; ++i )
+        {
+            if ( position_[i] < lowerBounds[i] )
+            {
+                position_[i] = lowerBounds[i];
+            }
+            else if ( position_[i] > upperBounds[i] )
+            {
+                position_[i] = upperBounds[i];
+            }
+        }
     }
 
 
@@ -75,20 +99,21 @@ public:
 
 
 
-template< size_t __NUM_PARAMS, typename __PARAM_T = double, typename __FITNESS_T = double >
-class BestParticle : public Particle< __NUM_PARAMS, __PARAM_T, __FITNESS_T >
+template< typename __PARTICLE_T >
+class BestParticle : public __PARTICLE_T
 {
 public:
 
-    using Base = Particle< __NUM_PARAMS, __PARAM_T, __FITNESS_T >;
-    using param_t = __PARAM_T;
-    using fitness_t = __FITNESS_T;
+    using Base = __PARTICLE_T;
 
-    BestParticle()
+
+    inline BestParticle()
         : Base{}
     {}
 
-    virtual ~BestParticle() {}
+
+    inline virtual ~BestParticle() {}
+
 
     using Base::operator=;
     using Base::operator==;
@@ -99,7 +124,7 @@ public:
     using Base::operator<=;
 
 
-    bool trialParticle( const Base& particle )
+    inline bool trialParticle( const Base& particle )
     {
         if ( particle < *this )
         {
@@ -111,12 +136,12 @@ public:
     }
 
 
-    template< size_t __NUM_PARTICLES >
-    bool trialParticle( const Base ( &particles )[__NUM_PARTICLES] )
+    template< size_t NUM_PARTICLES >
+    inline bool trialParticle( const Base ( &particles )[NUM_PARTICLES] )
     {
         bool updated = false;
 
-        for ( size_t i = 0; i < __NUM_PARTICLES; ++i )
+        for ( size_t i = 0; i < NUM_PARTICLES; ++i )
         {
             if ( trialParticle( particles[i] ) )
             {

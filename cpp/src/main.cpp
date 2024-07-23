@@ -2,7 +2,7 @@
 #include "Thread.h"
 #include "Particle.h"
 #include "SwarmParticle.h"
-// #include "SwarmOptimization.h"
+#include "SwarmOptimization.h"
 
 #include "Rng.h"
 
@@ -10,28 +10,29 @@
 
 #include <thread>
 
+// double fitnessFunc( const Particle< 2 >& p )
+// {
+//     return p.position_[0] * p.position_[0] + p.position_[1] * p.position_[1];
+// }
+
+
 int main()
 {
-    const double lowerBound[3] = {1.0, 2.0, 3.0};
-    const double upperBound[3] = {2.0, 3.0, 4.0};
+    const double lowerBound[2] = {-5.0, -5.0};
+    const double upperBound[2] = {5.0, 5.0};
 
-    Particle< 3 > p;
+    SwarmOptimization< 50, 2 > oa{ lowerBound, upperBound };
 
-    for ( size_t i = 0; i < 3; i++ )
+    std::function< double( const Particle< 2 >& ) > fitnessFunc = []( const Particle< 2 >& p )
     {
-        std::cout << p.position_[i] << std::endl;
-    }
+        return ( p.position_[0] + 1.0 ) * ( p.position_[0] + 1.0 ) + p.position_[1] * p.position_[1];
+    };
 
-    SwarmParticle< 3 > sp;
+    oa.setFitnessFunc( fitnessFunc );
 
-    for ( size_t i = 0; i < 3; i++ )
-    {
-        std::cout << sp.position_[i] << std::endl;
-    }
+    oa.setMaxIterations( 10000 );
 
-    Rng< 3 >* rng = Rng< 3 >::getInstance();
-
-    // SwarmOptimization< 20, 2 > oa;
+    oa.run();
 
     return 0;
 }
