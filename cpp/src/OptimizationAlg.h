@@ -3,8 +3,15 @@
 
 #include "Particle.h"
 
+#include "Semaphore.h"
+
+#include <memory>
+
 #include <cstddef>
 #include <functional>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
 
 #include <iostream>
 
@@ -32,7 +39,7 @@ public:
     using fitness_t = typename particle_t::fitness_t;
 
 
-    OptimizationAlg( const param_t lowerBound[NUM_PARAMS], const param_t upperBound[NUM_PARAMS] )
+    OptimizationAlg( const param_t lowerBound[NUM_PARAMS], const param_t upperBound[NUM_PARAMS], const int numThreads = 1 )
         : upperBound_{}
         , lowerBound_{}
         , particles_{}
@@ -40,6 +47,8 @@ public:
         , iteration_{ 0 }
         , maxIterations_{ DEFAULT_MAX_ITERATIONS }
         , fitnessFunc_{ nullptr }
+        , semaphore_{ numThreads }
+        , threadingEnabled_{ false }
     {
         std::memcpy( upperBound_, upperBound, NUM_PARAMS * sizeof( param_t ) );
         std::memcpy( lowerBound_, lowerBound, NUM_PARAMS * sizeof( param_t ) );
@@ -109,6 +118,11 @@ public:
 
     virtual void updateParticles() = 0;
 
+    void enableThreading() { threadingEnabled_ = true; }
+    void disableThreading() { threadingEnabled_ = false; }
+    bool isThreadingEnabled() const { return threadingEnabled_; }
+
+
 
 protected:
 
@@ -134,9 +148,37 @@ private:
 
     void evaluateParticles()
     {
-        for ( size_t i = 0; i < NUM_PARTICLES; ++i )
+        if ( threadingEnabled_ )
         {
-            particles_[i].fitness_ = fitnessFunc_( particles_[i] );
+            std::mutex complMtx;
+            std::condition_variable complCv;
+            uint16_t numTasksCompleted = 0;
+
+            for ( size_t i = 0; i < NUM_PARTICLES; ++i )
+            {
+                semaphore_.acquire();
+
+                std::thread( [this, i, &complMtx, &complCv, &numTasksCompleted]()
+                {
+                    particles_[i].fitness_ = fitnessFunc_( particles_[i] );
+                    semaphore_.release();
+
+                    std::lock_guard< std::mutex > lock( complMtx );
+                    ++numTasksCompleted;
+                    complCv.notify_one();
+
+                } ).detach();
+            }
+
+            std::unique_lock< std::mutex > lock( complMtx );
+            complCv.wait( lock, [&numTasksCompleted]() { return numTasksCompleted == NUM_PARTICLES; } );
+        }
+        else
+        {
+            for ( size_t i = 0; i < NUM_PARTICLES; ++i )
+            {
+                particles_[i].fitness_ = fitnessFunc_( particles_[i] );
+            }
         }
     }
 
@@ -162,6 +204,11 @@ private:
     uint64_t maxIterations_;
 
     std::function< fitness_t( particle_t& ) > fitnessFunc_;
+
+    Semaphore semaphore_;
+    bool threadingEnabled_;
+
+    OptimizationAlg() = delete;
 
 
 }; // class OptimizationAlg

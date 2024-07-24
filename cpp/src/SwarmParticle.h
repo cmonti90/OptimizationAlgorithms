@@ -15,7 +15,7 @@ public:
     using fitness_t = __FITNESS_T;
 
     // Constructor
-    SwarmParticle()
+    inline SwarmParticle()
         : Base()
         , velocity_{}
         , bestParticle_{ nullptr }
@@ -24,10 +24,10 @@ public:
     }
 
     // Destructor
-    virtual ~SwarmParticle() {}
+    inline virtual ~SwarmParticle() {}
 
     // Copy constructor
-    SwarmParticle( const SwarmParticle& other )
+    inline SwarmParticle( const SwarmParticle& other )
         : Base( other )
         , velocity_{ other.velocity_ }
         , bestParticle_{ other.bestParticle_ }
@@ -36,7 +36,7 @@ public:
     }
 
     // Assignment operator
-    SwarmParticle& operator=( const SwarmParticle& other )
+    inline SwarmParticle& operator=( const SwarmParticle& other )
     {
         if ( this != &other )
         {
@@ -51,23 +51,8 @@ public:
         return *this;
     }
 
-    // operator Particle< __NUM_PARAMS, __PARAM_T, __FITNESS_T >() const
-    // {
-    //     Particle< __NUM_PARAMS, __PARAM_T, __FITNESS_T > p;
 
-    //     std::memcpy( p.position_, Base::position_, Base::NUM_PARAMS * sizeof( param_t ) );
-    //     p.fitness_ = Base::fitness_;
-
-    //     return p;
-    // }
-
-    // operator Particle< __NUM_PARAMS, __PARAM_T, __FITNESS_T >& ()
-    // {
-    //     return *this;
-    // }
-
-
-    void setBestParticle( const std::shared_ptr< SwarmParticle >& bestParticle )
+    inline void setBestParticle( const std::shared_ptr< SwarmParticle >& bestParticle )
     {
         bestParticle_ = bestParticle;
     }

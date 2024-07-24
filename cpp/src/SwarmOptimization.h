@@ -1,8 +1,10 @@
 #ifndef SWARM_OPTIMIZATION_H
 #define SWARM_OPTIMIZATION_H
 
+
 #include "OptimizationAlg.h"
 #include "SwarmParticle.h"
+
 
 template< size_t __NUM_PARTICLES, size_t __NUM_PARAMS, typename __PARAM_T = double, typename __FITNESS_T = double >
 class SwarmOptimization : public OptimizationAlg< __NUM_PARTICLES, SwarmParticle< __NUM_PARAMS, __PARAM_T, __FITNESS_T > >
@@ -20,8 +22,8 @@ public:
     static constexpr param_t DEFAULT_SOCIAL = 1.0;
 
     // Constructor
-    SwarmOptimization( const param_t lowerBound[__NUM_PARAMS], const param_t upperBound[__NUM_PARAMS] )
-        : Base( lowerBound, upperBound )
+    SwarmOptimization( const param_t lowerBound[__NUM_PARAMS], const param_t upperBound[__NUM_PARAMS], const int numThreads = 1 )
+        : Base( lowerBound, upperBound, numThreads )
         , inertia_{ DEFAULT_INERTIA }
         , cognitive_{ DEFAULT_COGNITIVE }
         , social_{ DEFAULT_SOCIAL }
