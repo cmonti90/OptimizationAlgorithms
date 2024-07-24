@@ -69,6 +69,8 @@ private:
         }
     }
 
+
+
     param_t inertia_;
     param_t cognitive_;
     param_t social_;
@@ -81,26 +83,6 @@ private:
 
 }; // class SwarmOptimization
 
-
-// template< size_t __NUM_PARTICLES, size_t __NUM_PARAMS, typename __PARAM_T, typename __FITNESS_T >
-// void SwarmOptimization< __NUM_PARTICLES, __NUM_PARAMS, __PARAM_T, __FITNESS_T >::updateParticles()
-// {
-//     static Rng<>* rng = Rng<>::getInstance();
-
-//     for ( size_t i = 0; i < Base::NUM_PARTICLES; i++ )
-//     {
-//         particle_t& particle = this->particles_[i];
-
-//         for ( size_t j = 0; j < particle.NUM_PARAMS; j++ )
-//         {
-//             particle.velocity_[j] = inertia_ * particle.velocity_[j] +
-//                                     cognitive_ * rng->drawUniform( this->lowerBound_[j], this->upperBound_[j] ) * ( particle.bestPosition_[j] - particle.position_[j] ) +
-//                                     social_ * rng->drawUniform( this->lowerBound_[j], this->upperBound_[j] ) * ( this->bestParticle_->position_[j] - particle.position_[j] );
-
-//             particle.position_[j] += particle.velocity_[j];
-//         }
-//     }
-// }
 
 
 #endif // SWARM_OPTIMIZATION_H

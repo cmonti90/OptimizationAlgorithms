@@ -55,6 +55,228 @@ public:
     }
 
 
+    // Addition operator
+    inline Particle operator+( const Particle& other ) const
+    {
+        Particle result;
+
+        for ( size_t i = 0; i < NUM_PARAMS; ++i )
+        {
+            result.position_[i] = position_[i] + other.position_[i];
+        }
+
+        return result;
+    }
+
+
+    // Subtraction operator
+    inline Particle operator-( const Particle& other ) const
+    {
+        Particle result;
+
+        for ( size_t i = 0; i < NUM_PARAMS; ++i )
+        {
+            result.position_[i] = position_[i] - other.position_[i];
+        }
+        
+        return result;
+    }
+
+
+    // Multiplication operator
+    inline Particle operator*( const Particle& other ) const
+    {
+        Particle result;
+
+        for ( size_t i = 0; i < NUM_PARAMS; ++i )
+        {
+            result.position_[i] = position_[i] * other.position_[i];
+        }
+
+        return result;
+    }
+
+
+    // Division operator
+    inline Particle operator/( const Particle& other ) const
+    {
+        Particle result;
+
+        for ( size_t i = 0; i < NUM_PARAMS; ++i )
+        {
+            result.position_[i] = position_[i] / other.position_[i];
+        }
+
+        return result;
+    }
+
+
+    // Addition assignment operator
+    inline Particle& operator+=( const Particle& other )
+    {
+        for ( size_t i = 0; i < NUM_PARAMS; ++i )
+        {
+            position_[i] += other.position_[i];
+        }
+
+        return *this;
+    }
+
+
+    // Subtraction assignment operator
+    inline Particle& operator-=( const Particle& other )
+    {
+        for ( size_t i = 0; i < NUM_PARAMS; ++i )
+        {
+            position_[i] -= other.position_[i];
+        }
+
+        return *this;
+    }
+
+
+    // Multiplication assignment operator
+    inline Particle& operator*=( const Particle& other )
+    {
+        for ( size_t i = 0; i < NUM_PARAMS; ++i )
+        {
+            position_[i] *= other.position_[i];
+        }
+
+        return *this;
+    }
+
+
+    // Division assignment operator
+    inline Particle& operator/=( const Particle& other )
+    {
+        for ( size_t i = 0; i < NUM_PARAMS; ++i )
+        {
+            position_[i] /= other.position_[i];
+        }
+
+        return *this;
+    }
+
+
+    // Addition operator
+    inline Particle operator+( const param_t scalar ) const
+    {
+        Particle result;
+
+        for ( size_t i = 0; i < NUM_PARAMS; ++i )
+        {
+            result.position_[i] = position_[i] + scalar;
+        }
+
+        return result;
+    }
+
+
+    // Subtraction operator
+    inline Particle operator-( const param_t scalar ) const
+    {
+        Particle result;
+
+        for ( size_t i = 0; i < NUM_PARAMS; ++i )
+        {
+            result.position_[i] = position_[i] - scalar;
+        }
+
+        return result;
+    }
+
+
+    // Multiplication operator
+    inline Particle operator*( const param_t scalar ) const
+    {
+        Particle result;
+
+        for ( size_t i = 0; i < NUM_PARAMS; ++i )
+        {
+            result.position_[i] = position_[i] * scalar;
+        }
+
+        return result;
+    }
+
+
+    // Division operator
+    inline Particle operator/( const param_t scalar ) const
+    {
+        Particle result;
+
+        for ( size_t i = 0; i < NUM_PARAMS; ++i )
+        {
+            result.position_[i] = position_[i] / scalar;
+        }
+
+        return result;
+    }
+
+
+    // Addition assignment operator
+    inline Particle& operator+=( const param_t scalar )
+    {
+        for ( size_t i = 0; i < NUM_PARAMS; ++i )
+        {
+            position_[i] += scalar;
+        }
+
+        return *this;
+    }
+
+
+    // Subtraction assignment operator
+    inline Particle& operator-=( const param_t scalar )
+    {
+        for ( size_t i = 0; i < NUM_PARAMS; ++i )
+        {
+            position_[i] -= scalar;
+        }
+
+        return *this;
+    }
+
+
+    // Multiplication assignment operator
+    inline Particle& operator*=( const param_t scalar )
+    {
+        for ( size_t i = 0; i < NUM_PARAMS; ++i )
+        {
+            position_[i] *= scalar;
+        }
+
+        return *this;
+    }
+
+
+    // Division assignment operator
+    inline Particle& operator/=( const param_t scalar )
+    {
+        for ( size_t i = 0; i < NUM_PARAMS; ++i )
+        {
+            position_[i] /= scalar;
+        }
+
+        return *this;
+    }
+
+
+    // Negation operator
+    inline Particle operator-() const
+    {
+        Particle result;
+
+        for ( size_t i = 0; i < NUM_PARAMS; ++i )
+        {
+            result.position_[i] = -position_[i];
+        }
+
+        return result;
+    }
+
+
     inline void initialize( const param_t lowerBounds[NUM_PARAMS], const param_t upperBounds[NUM_PARAMS] )
     {
         Rng<>* rng = Rng<>::getInstance();
@@ -96,6 +318,38 @@ public:
 
 
 }; // class Particle
+
+
+// Particle addition operator
+template< size_t NUM_PARAMS, typename PARAM_T, typename FITNESS_T >
+inline Particle< NUM_PARAMS, PARAM_T, FITNESS_T > operator+( const PARAM_T scalar, const Particle< NUM_PARAMS, PARAM_T, FITNESS_T >& particle )
+{
+    return particle + scalar;
+}
+
+
+// Particle subtraction operator
+template< size_t NUM_PARAMS, typename PARAM_T, typename FITNESS_T >
+inline Particle< NUM_PARAMS, PARAM_T, FITNESS_T > operator-( const PARAM_T scalar, const Particle< NUM_PARAMS, PARAM_T, FITNESS_T >& particle )
+{
+    return particle - scalar;
+}
+
+
+// Particle multiplication operator
+template< size_t NUM_PARAMS, typename PARAM_T, typename FITNESS_T >
+inline Particle< NUM_PARAMS, PARAM_T, FITNESS_T > operator*( const PARAM_T scalar, const Particle< NUM_PARAMS, PARAM_T, FITNESS_T >& particle )
+{
+    return particle * scalar;
+}
+
+
+// Particle division operator
+template< size_t NUM_PARAMS, typename PARAM_T, typename FITNESS_T >
+inline Particle< NUM_PARAMS, PARAM_T, FITNESS_T > operator/( const PARAM_T scalar, const Particle< NUM_PARAMS, PARAM_T, FITNESS_T >& particle )
+{
+    return particle / scalar;
+}
 
 
 

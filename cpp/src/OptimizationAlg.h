@@ -161,11 +161,12 @@ private:
                 std::thread( [this, i, &complMtx, &complCv, &numTasksCompleted]()
                 {
                     particles_[i].fitness_ = fitnessFunc_( particles_[i] );
-                    semaphore_.release();
 
                     std::lock_guard< std::mutex > lock( complMtx );
                     ++numTasksCompleted;
                     complCv.notify_one();
+                    
+                    semaphore_.release();
 
                 } ).detach();
             }
