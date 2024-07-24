@@ -7,15 +7,15 @@
 
 
 template< size_t __NUM_PARTICLES, size_t __NUM_PARAMS, typename __PARAM_T = double, typename __FITNESS_T = double >
-class SwarmOptimization : public OptimizationAlg< __NUM_PARTICLES, SwarmParticle< __NUM_PARAMS, __PARAM_T, __FITNESS_T > >
+class SwarmOptimization : public OptimizationAlg< __NUM_PARTICLES, SwarmParticle, __NUM_PARAMS, __PARAM_T, __FITNESS_T >
 {
 public:
 
     static constexpr size_t NUM_PARTICLES = __NUM_PARTICLES;
-    using Base = OptimizationAlg< __NUM_PARTICLES, SwarmParticle< __NUM_PARAMS, __PARAM_T, __FITNESS_T > >;
+    using Base = OptimizationAlg< __NUM_PARTICLES, SwarmParticle, __NUM_PARAMS, __PARAM_T, __FITNESS_T >;
     using particle_t = SwarmParticle< __NUM_PARAMS, __PARAM_T, __FITNESS_T >;
-    using param_t = typename particle_t::param_t;
-    using fitness_t = typename particle_t::fitness_t;
+    using param_t = __PARAM_T;
+    using fitness_t = __FITNESS_T;
 
     static constexpr param_t DEFAULT_INERTIA = 0.5;
     static constexpr param_t DEFAULT_COGNITIVE = 1.0;

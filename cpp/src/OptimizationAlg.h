@@ -15,11 +15,11 @@
 
 #include <iostream>
 
-template<size_t __NUM_PARTICLES, typename __PARTICLE_T,
+template< size_t __NUM_PARTICLES, template< size_t, typename, typename > typename __PARTICLE_T, size_t __NUM_PARAMS, typename __PARAM_T = double, typename __FITNESS_T = double,
          typename = typename std::enable_if<
              std::is_base_of<
-                 Particle<__PARTICLE_T::NUM_PARAMS, typename __PARTICLE_T::param_t, typename __PARTICLE_T::fitness_t>,
-                 __PARTICLE_T
+                 Particle< __NUM_PARAMS, __PARAM_T, __FITNESS_T >,
+                 __PARTICLE_T< __NUM_PARAMS, __PARAM_T, __FITNESS_T >
                  >::value
              >::type>
 class OptimizationAlg
@@ -33,10 +33,10 @@ public:
 
     static constexpr size_t NUM_PARTICLES = __NUM_PARTICLES;
 
-    using particle_t = __PARTICLE_T;
+    using particle_t = __PARTICLE_T< __NUM_PARAMS, __PARAM_T, __FITNESS_T >;
     static constexpr size_t NUM_PARAMS = particle_t::NUM_PARAMS;
-    using param_t = typename particle_t::param_t;
-    using fitness_t = typename particle_t::fitness_t;
+    using param_t = __PARAM_T;
+    using fitness_t = __FITNESS_T;
 
 
     OptimizationAlg( const param_t lowerBound[NUM_PARAMS], const param_t upperBound[NUM_PARAMS], const int numThreads = 1 )
