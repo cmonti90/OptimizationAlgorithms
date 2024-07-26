@@ -3,6 +3,8 @@
 #include "SwarmOptimization.h"
 #include "DifferentialEvolution.h"
 
+#include "Timer.h"
+
 #include <chrono>
 #include <iostream>
 
@@ -17,8 +19,8 @@ int main()
     const double lowerBound[2] = {-5.0, -5.0};
     const double upperBound[2] = {5.0, 5.0};
 
-    SwarmOptimization< 30, 2 > oa{ lowerBound, upperBound, 8 };
-    // DifferentialEvolution< 30, 2 > oa{ lowerBound, upperBound, 8 };
+    // SwarmOptimization< 30, 2 > oa{ lowerBound, upperBound, 8 };
+    DifferentialEvolution< 30, 2 > oa{ lowerBound, upperBound, 8 };
 
     oa.setFitnessFunc( fitnessFunc );
 
@@ -33,6 +35,8 @@ int main()
     std::chrono::duration< double > duration = end - start;
 
     std::cout << "The function took " << duration.count() << " seconds to run." << std::endl;
+
+    Timer::getInstance()->printTimeStats();
 
     return 0;
 }

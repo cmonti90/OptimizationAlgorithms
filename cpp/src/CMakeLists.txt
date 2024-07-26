@@ -1,6 +1,7 @@
 
 set( SOURCES
     main.cpp
+    Timer.cpp
 )
 
 add_executable(main ${SOURCES})

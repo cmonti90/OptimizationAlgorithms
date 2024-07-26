@@ -5,6 +5,8 @@
 
 #include "Semaphore.h"
 
+#include "Timer.h"
+
 #include <memory>
 
 #include <cstddef>
@@ -47,6 +49,7 @@ public:
         , semaphore_{ numThreads }
         , threadingEnabled_{ false }
         , rng_{ Rng<>::getInstance() }
+        , timer_{ Timer::getInstance() }
         , fitnessFunc_{ nullptr }
         , iteration_{ 0 }
         , maxIterations_{ DEFAULT_MAX_ITERATIONS }
@@ -135,6 +138,8 @@ protected:
 
     virtual void updateParticles()
     {
+        timer_->startUpdateParticleLoop();
+
         if ( threadingEnabled_ )
         {
             std::mutex complMtx;
@@ -168,11 +173,15 @@ protected:
                 updateParticle( particles_[i] );
             }
         }
+
+        timer_->stopUpdateParticleLoop();
     }
 
 
     virtual void evaluateParticles()
     {
+        timer_->startEvaluateParticleLoop();
+
         if ( threadingEnabled_ )
         {
             std::mutex complMtx;
@@ -206,6 +215,8 @@ protected:
                 particles_[i].fitness_ = fitnessFunc_( particles_[i] );
             }
         }
+
+        timer_->stopEvaluateParticleLoop();
     }
 
 
@@ -223,6 +234,7 @@ protected:
     bool threadingEnabled_;
 
     Rng<>* rng_;
+    Timer* timer_;
 
     std::function< fitness_t( particle_t& ) > fitnessFunc_;
 
@@ -230,10 +242,14 @@ private:
 
     void initializeParticles()
     {
+        timer_->startInitializeParticleLoop();
+
         for ( size_t i = 0; i < NUM_PARTICLES; ++i )
         {
             particles_[i].initialize( lowerBound_, upperBound_ );
         }
+
+        timer_->stopInitializeParticleLoop();
     }
 
 
