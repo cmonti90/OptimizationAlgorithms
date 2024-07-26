@@ -23,75 +23,56 @@ public:
     // Constructor
     DifferentialEvolution( const param_t lowerBound[__NUM_PARAMS], const param_t upperBound[__NUM_PARAMS], const int numThreads = 1 )
         : Base( lowerBound, upperBound, numThreads )
-        , inertia_{ DEFAULT_INERTIA }
-        , cognitive_{ DEFAULT_COGNITIVE }
-        , social_{ DEFAULT_SOCIAL }
+        , mutation_{ DEFAULT_MUTATION_FACTOR }
+        , crossProb_{ DEFAULT_CROSSOVER_PROBABILITY }
     {
     }
 
     // Destructor
     virtual ~DifferentialEvolution() {}
 
-    void setInertia( const param_t inertia ) { inertia_ = inertia; }
-    void setCognitive( const param_t cognitive ) { cognitive_ = cognitive; }
-    void setSocial( const param_t social ) { social_ = social; }
+    void setMutationFactor( const param_t mutation ) { mutation_ = mutation; }
+    void setCrossoverProbability( const param_t crossProb ) { crossProb_ = crossProb; }
 
 
-private:
+protected:
 
-    virtual void postInitialize() override
+    void updateParticle( particle_t& particle ) override
     {
-        for ( size_t i = 0; i < Base::NUM_PARTICLES; i++ )
+        // Mutation selection
+        uint mutationIndices[3];
+        this->rng_->choice( mutationIndices, NUM_PARTICLES - 1, false );
+
+        const particle_t mutants[3] = {
+            this->particles_[mutationIndices[0]],
+            this->particles_[mutationIndices[1]],
+            this->particles_[mutationIndices[2]]
+        };
+
+
+        // Mutation
+        particle_t trialParticle = mutants[0] + mutation_ * ( mutants[1] - mutants[2] );
+
+
+        // Crossover
+        for ( size_t j = 0; j < particle.NUM_PARAMS; j++ )
         {
-            this->particles_[i].setBestParticle( this->bestParticle_ );
-        }
-    }
-
-    virtual void updateParticles() override
-    {
-        static Rng<>* rng = Rng<>::getInstance();
-        
-
-        for ( size_t i = 0; i < Base::NUM_PARTICLES; i++ )
-        {
-            particle_t& particle = this->particles_[i];
-            
-            // Mutation selection
-            uint mutationIndices[3];
-            rng->choice( mutationIndices, Base::NUM_PARTICLES - 1, false );
-
-            const particle_t mutants[3] = {
-                this->particles_[mutationIndices[0]],
-                this->particles_[mutationIndices[1]],
-                this->particles_[mutationIndices[2]]
-            };
-
-
-            // Mutation
-            particle_t trialParticle = mutants[0] + mutation_ * ( mutants[1] - mutants[2] );
-
-
-            // Crossover
-            for ( size_t j = 0; j < particle.NUM_PARAMS; j++ )
+            if ( this->rng_->drawUniform( 0.0, 1.0 ) > crossProb_ )
             {
-                if ( rng->drawUniform< param_t >() > crossProb_ )
-                {
-                    trialParticle.position_[j] = particle.position_[j];
-                }
-            }
-
-            trialParticle.clip( this->lowerBound_, this->upperBound_ );
-
-            trialParticle.fitness_ = this->fitnessFunc_( trialParticle );
-
-            // Selection
-            if ( trialParticle.fitness_ < particle.fitness_ )
-            {
-                particle = trialParticle;
+                trialParticle.position_[j] = particle.position_[j];
             }
         }
-    }
 
+        trialParticle.clip( this->lowerBound_, this->upperBound_ );
+
+        trialParticle.fitness_ = this->fitnessFunc_( trialParticle );
+
+        // Selection
+        if ( trialParticle.fitness_ < particle.fitness_ )
+        {
+            particle = trialParticle;
+        }
+    }
 
 
     param_t mutation_;

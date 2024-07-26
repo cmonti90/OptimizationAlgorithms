@@ -38,35 +38,61 @@ public:
     void setSocial( const param_t social ) { social_ = social; }
 
 
-private:
+protected:
 
-    virtual void postInitialize() override
+
+    virtual void updateParticle( particle_t& particle ) override
     {
-        for ( size_t i = 0; i < Base::NUM_PARTICLES; i++ )
+        for ( size_t j = 0; j < particle.NUM_PARAMS; j++ )
         {
-            this->particles_[i].setBestParticle( this->bestParticle_ );
+            particle.velocity_[j] = inertia_ * particle.velocity_[j] +
+                                    cognitive_ * this->rng_->drawUniform( 0.0, 1.0 ) * ( particle.bestPosition_[j] - particle.position_[j] ) +
+                                    social_ * this->rng_->drawUniform( 0.0, 1.0 ) * ( this->bestParticle_->position_[j] - particle.position_[j] );
+
+            particle.position_[j] += particle.velocity_[j];
         }
+
+        particle.clip( this->lowerBound_, this->upperBound_ );
     }
+
 
     virtual void updateParticles() override
     {
-        static Rng<>* rng = Rng<>::getInstance();
-
-        for ( size_t i = 0; i < Base::NUM_PARTICLES; i++ )
+        if ( this->threadingEnabled_ )
         {
-            particle_t& particle = this->particles_[i];
+            std::mutex complMtx;
+            std::condition_variable complCv;
+            uint16_t numTasksCompleted = 0;
 
-            for ( size_t j = 0; j < particle.NUM_PARAMS; j++ )
+            for ( size_t i = 0; i < Base::NUM_PARTICLES; i++ )
             {
-                particle.velocity_[j] = inertia_ * particle.velocity_[j] +
-                                        cognitive_ * rng->drawUniform( 0.0, 1.0 ) * ( particle.bestPosition_[j] - particle.position_[j] ) +
-                                        social_ * rng->drawUniform( 0.0, 1.0 ) * ( this->bestParticle_->position_[j] - particle.position_[j] );
+                this->semaphore_.acquire();
 
-                particle.position_[j] += particle.velocity_[j];
+                std::thread( [this, i, &complMtx, &complCv, &numTasksCompleted]()
+                {
+                    updateParticle( this->particles_[i] );
+
+                    std::lock_guard< std::mutex > lock( complMtx );
+                    ++numTasksCompleted;
+
+                    this->semaphore_.release();
+                    complCv.notify_one();
+
+                } ).detach();
             }
 
-            particle.clip( this->lowerBound_, this->upperBound_ );
+            std::unique_lock< std::mutex > lock( complMtx );
+            complCv.wait( lock, [&numTasksCompleted]() { return numTasksCompleted == NUM_PARTICLES; } );
         }
+        else
+        {
+            for ( size_t i = 0; i < Base::NUM_PARTICLES; i++ )
+            {
+                updateParticle( this->particles_[i] );
+            }
+        }
+
+        this->evaluateParticles();
     }
 
 

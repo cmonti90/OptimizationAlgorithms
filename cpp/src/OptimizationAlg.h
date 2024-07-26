@@ -16,12 +16,12 @@
 #include <iostream>
 
 template< size_t __NUM_PARTICLES, template< size_t, typename, typename > typename __PARTICLE_T, size_t __NUM_PARAMS, typename __PARAM_T = double, typename __FITNESS_T = double,
-         typename = typename std::enable_if<
-             std::is_base_of<
-                 Particle< __NUM_PARAMS, __PARAM_T, __FITNESS_T >,
-                 __PARTICLE_T< __NUM_PARAMS, __PARAM_T, __FITNESS_T >
-                 >::value
-             >::type>
+          typename = typename std::enable_if<
+              std::is_base_of<
+                  Particle< __NUM_PARAMS, __PARAM_T, __FITNESS_T >,
+                  __PARTICLE_T< __NUM_PARAMS, __PARAM_T, __FITNESS_T >
+                  >::value
+              >::type>
 class OptimizationAlg
 {
 public:
@@ -44,11 +44,12 @@ public:
         , lowerBound_{}
         , particles_{}
         , bestParticle_{ std::make_shared< BestParticle< particle_t > >() }
-        , iteration_{ 0 }
-        , maxIterations_{ DEFAULT_MAX_ITERATIONS }
-        , fitnessFunc_{ nullptr }
         , semaphore_{ numThreads }
         , threadingEnabled_{ false }
+        , rng_{ Rng<>::getInstance() }
+        , fitnessFunc_{ nullptr }
+        , iteration_{ 0 }
+        , maxIterations_{ DEFAULT_MAX_ITERATIONS }
     {
         std::memcpy( upperBound_, upperBound, NUM_PARAMS * sizeof( param_t ) );
         std::memcpy( lowerBound_, lowerBound, NUM_PARAMS * sizeof( param_t ) );
@@ -116,37 +117,61 @@ public:
     }
 
 
-    virtual void updateParticles() = 0;
-
     void enableThreading() { threadingEnabled_ = true; }
     void disableThreading() { threadingEnabled_ = false; }
     bool isThreadingEnabled() const { return threadingEnabled_; }
 
+
+    std::function< fitness_t( particle_t& ) > getFitnessFunc() const { return fitnessFunc_; }    
 
 
 protected:
 
     virtual void postInitialize() {}
 
-    param_t upperBound_[NUM_PARAMS];
-    param_t lowerBound_[NUM_PARAMS];
 
-    particle_t particles_[NUM_PARTICLES];
+    virtual void updateParticle( particle_t& ) = 0;
 
-    std::shared_ptr< BestParticle< particle_t > > bestParticle_;
 
-private:
-
-    void initializeParticles()
+    virtual void updateParticles()
     {
-        for ( size_t i = 0; i < NUM_PARTICLES; ++i )
+        if ( threadingEnabled_ )
         {
-            particles_[i].initialize( lowerBound_, upperBound_ );
+            std::mutex complMtx;
+            std::condition_variable complCv;
+            uint16_t numTasksCompleted = 0;
+
+            for ( size_t i = 0; i < NUM_PARTICLES; ++i )
+            {
+                semaphore_.acquire();
+
+                std::thread( [this, i, &complMtx, &complCv, &numTasksCompleted]()
+                {
+                    updateParticle( particles_[i] );
+
+                    std::lock_guard< std::mutex > lock( complMtx );
+                    ++numTasksCompleted;
+
+                    semaphore_.release();
+                    complCv.notify_one();
+
+                } ).detach();
+            }
+
+            std::unique_lock< std::mutex > lock( complMtx );
+            complCv.wait( lock, [&numTasksCompleted]() { return numTasksCompleted == NUM_PARTICLES; } );
+        }
+        else
+        {
+            for ( size_t i = 0; i < NUM_PARTICLES; ++i )
+            {
+                updateParticle( particles_[i] );
+            }
         }
     }
 
 
-    void evaluateParticles()
+    virtual void evaluateParticles()
     {
         if ( threadingEnabled_ )
         {
@@ -164,9 +189,9 @@ private:
 
                     std::lock_guard< std::mutex > lock( complMtx );
                     ++numTasksCompleted;
-                    complCv.notify_one();
-                    
+
                     semaphore_.release();
+                    complCv.notify_one();
 
                 } ).detach();
             }
@@ -184,15 +209,39 @@ private:
     }
 
 
-    virtual void iterate()
+    virtual bool isConverged() { return false; };
+
+
+    param_t upperBound_[NUM_PARAMS];
+    param_t lowerBound_[NUM_PARAMS];
+
+    particle_t particles_[NUM_PARTICLES];
+
+    std::shared_ptr< BestParticle< particle_t > > bestParticle_;
+
+    Semaphore semaphore_;
+    bool threadingEnabled_;
+
+    Rng<>* rng_;
+
+    std::function< fitness_t( particle_t& ) > fitnessFunc_;
+
+private:
+
+    void initializeParticles()
     {
-        updateParticles();
-        evaluateParticles();
-        updateBestParticle();
+        for ( size_t i = 0; i < NUM_PARTICLES; ++i )
+        {
+            particles_[i].initialize( lowerBound_, upperBound_ );
+        }
     }
 
 
-    virtual bool isConverged() { return false; };
+    virtual void iterate()
+    {
+        updateParticles();
+        updateBestParticle();
+    }
 
 
     void updateBestParticle()
@@ -203,11 +252,6 @@ private:
 
     uint64_t iteration_;
     uint64_t maxIterations_;
-
-    std::function< fitness_t( particle_t& ) > fitnessFunc_;
-
-    Semaphore semaphore_;
-    bool threadingEnabled_;
 
     OptimizationAlg() = delete;
 

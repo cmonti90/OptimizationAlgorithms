@@ -1,16 +1,10 @@
 
-#include "Thread.h"
-#include "Particle.h"
-#include "SwarmParticle.h"
+
 #include "SwarmOptimization.h"
-
-#include "Rng.h"
-
-#include <iostream>
-
-#include <thread>
+#include "DifferentialEvolution.h"
 
 #include <chrono>
+#include <iostream>
 
 double fitnessFunc( const Particle< 2 >& p )
 {
@@ -23,11 +17,12 @@ int main()
     const double lowerBound[2] = {-5.0, -5.0};
     const double upperBound[2] = {5.0, 5.0};
 
-    SwarmOptimization< 20, 2 > oa{ lowerBound, upperBound, 8 };
+    SwarmOptimization< 30, 2 > oa{ lowerBound, upperBound, 8 };
+    // DifferentialEvolution< 30, 2 > oa{ lowerBound, upperBound, 8 };
 
     oa.setFitnessFunc( fitnessFunc );
 
-    oa.setMaxIterations( 5 );
+    oa.setMaxIterations( 50 );
 
     oa.enableThreading();
 

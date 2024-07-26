@@ -18,7 +18,6 @@ public:
     inline SwarmParticle()
         : Base()
         , velocity_{}
-        , bestParticle_{ nullptr }
     {
         std::memset( velocity_, static_cast< param_t >( 0 ), Base::NUM_PARAMS * sizeof( param_t ) );
     }
@@ -30,7 +29,6 @@ public:
     inline SwarmParticle( const SwarmParticle& other )
         : Base( other )
         , velocity_{ other.velocity_ }
-        , bestParticle_{ other.bestParticle_ }
     {
         std::memcpy( velocity_, other.velocity_, Base::NUM_PARAMS * sizeof( param_t ) );
     }
@@ -44,27 +42,15 @@ public:
 
             std::memcpy( velocity_, other.velocity_, Base::NUM_PARAMS * sizeof( param_t ) );
             std::memcpy( bestPosition_, other.bestPosition_, Base::NUM_PARAMS * sizeof( param_t ) );
-
-            bestParticle_ = other.bestParticle_;
         }
 
         return *this;
     }
 
 
-    inline void setBestParticle( const std::shared_ptr< SwarmParticle >& bestParticle )
-    {
-        bestParticle_ = bestParticle;
-    }
-
-
     param_t velocity_[Base::NUM_PARAMS];
 
     param_t bestPosition_[Base::NUM_PARAMS];
-
-protected:
-
-    std::shared_ptr< SwarmParticle > bestParticle_;
 
 
 }; // class SwarmParticle

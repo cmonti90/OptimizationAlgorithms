@@ -1,7 +1,6 @@
 
 set( SOURCES
     main.cpp
-    Thread.cpp
 )
 
 add_executable(main ${SOURCES})

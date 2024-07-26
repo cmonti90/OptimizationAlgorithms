@@ -33,7 +33,7 @@ public:
 
 
     template< typename float_t >
-    inline float_t drawUniform( const float_t lowerBound = static_cast< float_t >( 0 ), const float_t upperBound = static_cast< float_t >( 0 ) )
+    inline float_t drawUniform( const float_t lowerBound = static_cast< float_t >( 0 ), const float_t upperBound = static_cast< float_t >( 1 ) )
     {
         std::uniform_real_distribution< float_t > realDistribution_{ lowerBound, upperBound };
 
