@@ -60,29 +60,49 @@ protected:
     {
         if ( this->threadingEnabled_ )
         {
-            std::mutex complMtx;
-            std::condition_variable complCv;
-            uint16_t numTasksCompleted = 0;
-
-            for ( size_t i = 0; i < Base::NUM_PARTICLES; i++ )
+            if ( 0 )
             {
-                this->semaphore_.acquire();
+                std::mutex complMtx;
+                std::condition_variable complCv;
+                uint16_t numTasksCompleted = 0;
 
-                std::thread( [this, i, &complMtx, &complCv, &numTasksCompleted]()
+                for ( size_t i = 0; i < Base::NUM_PARTICLES; i++ )
                 {
-                    updateParticle( this->particles_[i] );
+                    this->semaphore_.acquire();
 
-                    std::lock_guard< std::mutex > lock( complMtx );
-                    ++numTasksCompleted;
+                    std::thread( [this, i, &complMtx, &complCv, &numTasksCompleted]()
+                    {
+                        updateParticle( this->particles_[i] );
 
-                    this->semaphore_.release();
-                    complCv.notify_one();
+                        std::lock_guard< std::mutex > lock( complMtx );
+                        ++numTasksCompleted;
 
-                } ).detach();
+                        this->semaphore_.release();
+                        complCv.notify_one();
+
+                    } ).detach();
+                }
+
+                std::unique_lock< std::mutex > lock( complMtx );
+                complCv.wait( lock, [&numTasksCompleted]() { return numTasksCompleted == NUM_PARTICLES; } );
             }
+            else
+            {
+                std::array< std::future< void >, Base::NUM_PARTICLES > futures;
 
-            std::unique_lock< std::mutex > lock( complMtx );
-            complCv.wait( lock, [&numTasksCompleted]() { return numTasksCompleted == NUM_PARTICLES; } );
+                for ( size_t i = 0; i < Base::NUM_PARTICLES; i++ )
+                {
+                    futures[i] = this->threadPool_.enqueue( [this, i]() {
+                        updateParticle( this->particles_[i] );
+                    } );
+                }
+
+                for ( size_t i = 0; i < Base::NUM_PARTICLES; i++ )
+                {
+                    futures[i].get();
+                }
+
+            }
         }
         else
         {

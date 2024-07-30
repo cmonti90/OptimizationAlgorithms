@@ -10,6 +10,8 @@
 
 double fitnessFunc( const Particle< 2 >& p )
 {
+    std::this_thread::sleep_for( std::chrono::milliseconds( 10 ) );
+
     return p.position_[0] * p.position_[0] + p.position_[1] * p.position_[1];
 }
 
@@ -20,7 +22,7 @@ int main()
     const double upperBound[2] = {5.0, 5.0};
 
     // SwarmOptimization< 30, 2 > oa{ lowerBound, upperBound, 8 };
-    DifferentialEvolution< 30, 2 > oa{ lowerBound, upperBound, 8 };
+    DifferentialEvolution< 300, 2 > oa{ lowerBound, upperBound, 8 };
 
     oa.setFitnessFunc( fitnessFunc );
 

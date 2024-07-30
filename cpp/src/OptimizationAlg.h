@@ -6,6 +6,8 @@
 #include "Semaphore.h"
 
 #include "Timer.h"
+#include "ThreadPool.h"
+#include "Rng.h"
 
 #include <memory>
 
@@ -48,6 +50,7 @@ public:
         , bestParticle_{ std::make_shared< BestParticle< particle_t > >() }
         , semaphore_{ numThreads }
         , threadingEnabled_{ false }
+        , threadPool_{}
         , rng_{ Rng<>::getInstance() }
         , timer_{ Timer::getInstance() }
         , fitnessFunc_{ nullptr }
@@ -125,7 +128,7 @@ public:
     bool isThreadingEnabled() const { return threadingEnabled_; }
 
 
-    std::function< fitness_t( particle_t& ) > getFitnessFunc() const { return fitnessFunc_; }    
+    std::function< fitness_t( particle_t& ) > getFitnessFunc() const { return fitnessFunc_; }
 
 
 protected:
@@ -142,29 +145,46 @@ protected:
 
         if ( threadingEnabled_ )
         {
-            std::mutex complMtx;
-            std::condition_variable complCv;
-            uint16_t numTasksCompleted = 0;
+            // std::mutex complMtx;
+            // std::condition_variable complCv;
+            // uint16_t numTasksCompleted = 0;
+
+            // for ( size_t i = 0; i < NUM_PARTICLES; ++i )
+            // {
+            //     semaphore_.acquire();
+
+            //     std::thread( [this, i, &complMtx, &complCv, &numTasksCompleted]()
+            //     {
+            //         updateParticle( particles_[i] );
+
+            //         std::lock_guard< std::mutex > lock( complMtx );
+            //         ++numTasksCompleted;
+
+            //         semaphore_.release();
+            //         complCv.notify_one();
+
+            //     } ).detach();
+            // }
+
+            // std::unique_lock< std::mutex > lock( complMtx );
+            // complCv.wait( lock, [&numTasksCompleted]() { return numTasksCompleted == NUM_PARTICLES; } );
+
+            std::array< std::future< void >, NUM_PARTICLES > futures;
 
             for ( size_t i = 0; i < NUM_PARTICLES; ++i )
             {
-                semaphore_.acquire();
-
-                std::thread( [this, i, &complMtx, &complCv, &numTasksCompleted]()
+                futures[i] = threadPool_.enqueue( [this, i]()
                 {
                     updateParticle( particles_[i] );
-
-                    std::lock_guard< std::mutex > lock( complMtx );
-                    ++numTasksCompleted;
-
-                    semaphore_.release();
-                    complCv.notify_one();
-
-                } ).detach();
+                } );
             }
 
-            std::unique_lock< std::mutex > lock( complMtx );
-            complCv.wait( lock, [&numTasksCompleted]() { return numTasksCompleted == NUM_PARTICLES; } );
+            for ( size_t i = 0; i < NUM_PARTICLES; ++i )
+            {
+                futures[i].get();
+            }
+
+
         }
         else
         {
@@ -184,29 +204,44 @@ protected:
 
         if ( threadingEnabled_ )
         {
-            std::mutex complMtx;
-            std::condition_variable complCv;
-            uint16_t numTasksCompleted = 0;
+            // std::mutex complMtx;
+            // std::condition_variable complCv;
+            // uint16_t numTasksCompleted = 0;
+
+            // for ( size_t i = 0; i < NUM_PARTICLES; ++i )
+            // {
+            //     semaphore_.acquire();
+
+            //     std::thread( [this, i, &complMtx, &complCv, &numTasksCompleted]()
+            //     {
+            //         particles_[i].fitness_ = fitnessFunc_( particles_[i] );
+
+            //         std::lock_guard< std::mutex > lock( complMtx );
+            //         ++numTasksCompleted;
+
+            //         semaphore_.release();
+            //         complCv.notify_one();
+
+            //     } ).detach();
+            // }
+
+            // std::unique_lock< std::mutex > lock( complMtx );
+            // complCv.wait( lock, [&numTasksCompleted]() { return numTasksCompleted == NUM_PARTICLES; } );
+
+            std::array< std::future< void >, NUM_PARTICLES > futures;
 
             for ( size_t i = 0; i < NUM_PARTICLES; ++i )
             {
-                semaphore_.acquire();
-
-                std::thread( [this, i, &complMtx, &complCv, &numTasksCompleted]()
+                futures[i] = threadPool_.enqueue( [this, i]()
                 {
                     particles_[i].fitness_ = fitnessFunc_( particles_[i] );
-
-                    std::lock_guard< std::mutex > lock( complMtx );
-                    ++numTasksCompleted;
-
-                    semaphore_.release();
-                    complCv.notify_one();
-
-                } ).detach();
+                } );
             }
 
-            std::unique_lock< std::mutex > lock( complMtx );
-            complCv.wait( lock, [&numTasksCompleted]() { return numTasksCompleted == NUM_PARTICLES; } );
+            for ( size_t i = 0; i < NUM_PARTICLES; ++i )
+            {
+                futures[i].get();
+            }
         }
         else
         {
@@ -232,6 +267,7 @@ protected:
 
     Semaphore semaphore_;
     bool threadingEnabled_;
+    ThreadPool< 4 > threadPool_;
 
     Rng<>* rng_;
     Timer* timer_;
