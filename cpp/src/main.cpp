@@ -10,7 +10,7 @@
 
 double fitnessFunc( const Particle< 2 >& p )
 {
-    std::this_thread::sleep_for( std::chrono::milliseconds( 10 ) );
+    std::this_thread::sleep_for( std::chrono::milliseconds( 1 ) );
 
     return p.position_[0] * p.position_[0] + p.position_[1] * p.position_[1];
 }
