@@ -8,7 +8,9 @@
 #include <chrono>
 #include <iostream>
 
-double fitnessFunc( const Particle< 2 >& p )
+
+
+double fitnessFunc( const MetaOpt::Particle< 2 >& p )
 {
     std::this_thread::sleep_for( std::chrono::milliseconds( 1 ) );
 
@@ -21,14 +23,12 @@ int main()
     const double lowerBound[2] = {-5.0, -5.0};
     const double upperBound[2] = {5.0, 5.0};
 
-    // SwarmOptimization< 30, 2 > oa{ lowerBound, upperBound, 8 };
-    DifferentialEvolution< 300, 2 > oa{ lowerBound, upperBound, 8 };
+    // MetaOpt::SwarmOptimization< 30, 2 > oa{ lowerBound, upperBound, 8 };
+    MetaOpt::DifferentialEvolution< 30, 2 > oa{ lowerBound, upperBound, 8 };
 
     oa.setFitnessFunc( fitnessFunc );
 
     oa.setMaxIterations( 50 );
-
-    oa.enableThreading();
 
     auto start = std::chrono::high_resolution_clock::now();
     oa.run();
@@ -38,7 +38,7 @@ int main()
 
     std::cout << "The function took " << duration.count() << " seconds to run." << std::endl;
 
-    Timer::getInstance()->printTimeStats();
+    MetaOpt::Timer::getInstance()->printTimeStats();
 
     return 0;
 }

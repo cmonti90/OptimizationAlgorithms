@@ -6,36 +6,43 @@
 #include "SwarmParticle.h"
 
 
+
+namespace MetaOpt
+{
+
 template< size_t __NUM_PARTICLES, size_t __NUM_PARAMS, typename __PARAM_T = double, typename __FITNESS_T = double >
 class SwarmOptimization : public OptimizationAlg< __NUM_PARTICLES, SwarmParticle, __NUM_PARAMS, __PARAM_T, __FITNESS_T >
 {
 public:
 
-    static constexpr size_t NUM_PARTICLES = __NUM_PARTICLES;
-    using Base = OptimizationAlg< __NUM_PARTICLES, SwarmParticle, __NUM_PARAMS, __PARAM_T, __FITNESS_T >;
+    using Base       = OptimizationAlg< __NUM_PARTICLES, SwarmParticle, __NUM_PARAMS, __PARAM_T, __FITNESS_T >;
     using particle_t = SwarmParticle< __NUM_PARAMS, __PARAM_T, __FITNESS_T >;
-    using param_t = __PARAM_T;
-    using fitness_t = __FITNESS_T;
+    using param_t    = __PARAM_T;
+    using fitness_t  = __FITNESS_T;
 
-    static constexpr param_t DEFAULT_INERTIA = 0.5;
+
+    static constexpr size_t  NUM_PARTICLES     = __NUM_PARTICLES;
+    static constexpr param_t DEFAULT_INERTIA   = 0.5;
     static constexpr param_t DEFAULT_COGNITIVE = 1.0;
-    static constexpr param_t DEFAULT_SOCIAL = 1.0;
+    static constexpr param_t DEFAULT_SOCIAL    = 1.0;
+
+
 
     // Constructor
     SwarmOptimization( const param_t lowerBound[__NUM_PARAMS], const param_t upperBound[__NUM_PARAMS], const int numThreads = 1 )
         : Base( lowerBound, upperBound, numThreads )
-        , inertia_{ DEFAULT_INERTIA }
+        , inertia_  { DEFAULT_INERTIA }
         , cognitive_{ DEFAULT_COGNITIVE }
-        , social_{ DEFAULT_SOCIAL }
+        , social_   { DEFAULT_SOCIAL }
     {
     }
 
     // Destructor
     virtual ~SwarmOptimization() {}
 
-    void setInertia( const param_t inertia ) { inertia_ = inertia; }
+    void setInertia  ( const param_t inertia )   { inertia_   = inertia; }
     void setCognitive( const param_t cognitive ) { cognitive_ = cognitive; }
-    void setSocial( const param_t social ) { social_ = social; }
+    void setSocial   ( const param_t social )    { social_    = social; }
 
 
 protected:
@@ -53,68 +60,9 @@ protected:
         }
 
         particle.clip( this->lowerBound_, this->upperBound_ );
+
+        particle.fitness_ = this->fitnessFunc_( particle );
     }
-
-
-    virtual void updateParticles() override
-    {
-        if ( this->threadingEnabled_ )
-        {
-            if ( 0 )
-            {
-                std::mutex complMtx;
-                std::condition_variable complCv;
-                uint16_t numTasksCompleted = 0;
-
-                for ( size_t i = 0; i < Base::NUM_PARTICLES; i++ )
-                {
-                    this->semaphore_.acquire();
-
-                    std::thread( [this, i, &complMtx, &complCv, &numTasksCompleted]()
-                    {
-                        updateParticle( this->particles_[i] );
-
-                        std::lock_guard< std::mutex > lock( complMtx );
-                        ++numTasksCompleted;
-
-                        this->semaphore_.release();
-                        complCv.notify_one();
-
-                    } ).detach();
-                }
-
-                std::unique_lock< std::mutex > lock( complMtx );
-                complCv.wait( lock, [&numTasksCompleted]() { return numTasksCompleted == NUM_PARTICLES; } );
-            }
-            else
-            {
-                std::array< std::future< void >, Base::NUM_PARTICLES > futures;
-
-                for ( size_t i = 0; i < Base::NUM_PARTICLES; i++ )
-                {
-                    futures[i] = this->threadPool_.enqueue( [this, i]() {
-                        updateParticle( this->particles_[i] );
-                    } );
-                }
-
-                for ( size_t i = 0; i < Base::NUM_PARTICLES; i++ )
-                {
-                    futures[i].get();
-                }
-
-            }
-        }
-        else
-        {
-            for ( size_t i = 0; i < Base::NUM_PARTICLES; i++ )
-            {
-                updateParticle( this->particles_[i] );
-            }
-        }
-
-        this->evaluateParticles();
-    }
-
 
 
     param_t inertia_;
@@ -130,5 +78,6 @@ protected:
 }; // class SwarmOptimization
 
 
+} // namespace MetaOpt
 
 #endif // SWARM_OPTIMIZATION_H

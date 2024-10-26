@@ -3,10 +3,16 @@
 
 #include <algorithm>
 #include <cstring>
+#include <exception>
+#include <stdexcept>
 #include <random>
 #include <mutex>
 #include <numeric>
 
+
+
+namespace MetaOpt
+{
 
 template< typename __GENERATOR = std::mt19937 >
 class Rng
@@ -16,7 +22,7 @@ public:
     using generator_t = __GENERATOR;
 
 
-    virtual ~Rng() {}
+    ~Rng() = default;
 
 
     static Rng* getInstance()
@@ -114,7 +120,9 @@ private:
 
     Rng( const Rng& ) = delete;
     Rng& operator=( const Rng& ) = delete;
+
 }; // class Rng
 
+} // namespace MetaOpt
 
 #endif // RNG_H

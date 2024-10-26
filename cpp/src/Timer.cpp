@@ -4,6 +4,9 @@
 #include <iostream>
 
 
+namespace MetaOpt
+{
+
 void Timer::printTimeStats() const
 {
     std::cout << "initializeParticleLoop: " << initializeParticleLoop_.count() << " sec" << std::endl;
@@ -54,3 +57,5 @@ void Timer::stopEvaluateParticleLoop()
     evaluateParticleLoop_ += stopTime - evaluateParticleLoopStamp_;
 }
 
+
+} // namespace MetaOpt

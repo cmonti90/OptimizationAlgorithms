@@ -7,36 +7,20 @@
 #include <stdexcept>
 
 
+
+namespace MetaOpt
+{
+
 class Semaphore
 {
 public:
 
-    explicit Semaphore( const int count )
-        : count_( count )
-        , max_count_( count )
-        , mtx_()
-        , cv_()
-    {
-        if ( count <= 0 ) {
-            throw std::invalid_argument( "Semaphore initial count must be positive" );
-        }
-    }
+    explicit Semaphore( const int count );
+    ~Semaphore() = default;
 
 
-    void acquire()
-    {
-        std::unique_lock<std::mutex> lock( mtx_ );
-        cv_.wait( lock, [this]() { return count_ > 0; } );
-        --count_;
-    }
-
-
-    void release()
-    {
-        std::unique_lock<std::mutex> lock( mtx_ );
-        ++count_;
-        cv_.notify_one();
-    }
+    void acquire();
+    void release();
 
 
 private:
@@ -46,6 +30,13 @@ private:
 
     std::mutex mtx_;
     std::condition_variable cv_;
-};
+
+    Semaphore() = delete;
+    Semaphore( const Semaphore& ) = delete;
+    Semaphore& operator=( const Semaphore& ) = delete;
+
+}; // class Semaphore
+
+} // namespace MetaOpt
 
 #endif // SEMAPHORE_H

@@ -4,7 +4,8 @@
 
 #include <chrono>
 
-
+namespace MetaOpt
+{
 class Timer
 {
 public:
@@ -46,5 +47,6 @@ private:
 
 }; // class Timer
 
+} // namespace MetaOpt
 
 #endif // TIMER_H

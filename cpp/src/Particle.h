@@ -7,15 +7,22 @@
 #include <cstring>
 #include <limits>
 
+#include <initializer_list>
+#include <string>
+#include <exception>
+
 #include <iostream>
 
+
+namespace MetaOpt
+{
 
 template< size_t __NUM_PARAMS, typename __PARAM_T = double, typename __FITNESS_T = double >
 class Particle
 {
 public:
 
-    using param_t = __PARAM_T;
+    using param_t   = __PARAM_T;
     using fitness_t = __FITNESS_T;
 
     static constexpr size_t NUM_PARAMS = __NUM_PARAMS;
@@ -25,7 +32,7 @@ public:
         : position_{}
         , fitness_{ std::numeric_limits< fitness_t >::max() }
     {
-        std::memset( position_, static_cast< param_t >( 0 ), NUM_PARAMS * sizeof( param_t ) );
+        std::memset( position_, 0, NUM_PARAMS * sizeof( param_t ) );
     }
 
 
@@ -34,11 +41,34 @@ public:
 
 
     // Copy Constructor
+    inline Particle( const Particle ( &other )[NUM_PARAMS] )
+        : position_{}
+        , fitness_{ std::numeric_limits< fitness_t >::max() }
+    {
+        std::memcpy( position_, other, NUM_PARAMS * sizeof( param_t ) );
+    }
+
+
+    // Copy Constructor
     inline Particle( const Particle& other )
         : position_{}
         , fitness_{ other.fitness_ }
     {
         std::memcpy( position_, other.position_, NUM_PARAMS * sizeof( param_t ) );
+    }
+
+
+    // Copy Constructor
+    inline Particle( const std::initializer_list< param_t >& other )
+        : position_{}
+        , fitness_{ std::numeric_limits< fitness_t >::max() }
+    {
+        if ( other.size() != NUM_PARAMS )
+        {
+            throw std::invalid_argument( "Particle::Particle: initializer list size must match number of parameters" );
+        }
+
+        std::memset( position_, 0, NUM_PARAMS * sizeof( param_t ) );
     }
 
 
@@ -78,7 +108,7 @@ public:
         {
             result.position_[i] = position_[i] - other.position_[i];
         }
-        
+
         return result;
     }
 
@@ -408,5 +438,7 @@ public:
 
 
 }; // class BestParticle
+
+} // namespace MetaOpt
 
 #endif // PARTICLE_H

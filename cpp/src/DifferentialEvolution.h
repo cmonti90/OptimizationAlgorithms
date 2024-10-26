@@ -6,24 +6,30 @@
 #include "Particle.h"
 
 
+namespace MetaOpt
+{
+
 template< size_t __NUM_PARTICLES, size_t __NUM_PARAMS, typename __PARAM_T = double, typename __FITNESS_T = double >
 class DifferentialEvolution : public OptimizationAlg< __NUM_PARTICLES, Particle, __NUM_PARAMS, __PARAM_T, __FITNESS_T >
 {
 public:
 
-    static constexpr size_t NUM_PARTICLES = __NUM_PARTICLES;
-    using Base = OptimizationAlg< __NUM_PARTICLES, Particle, __NUM_PARAMS, __PARAM_T, __FITNESS_T >;
+    using Base       = OptimizationAlg< __NUM_PARTICLES, Particle, __NUM_PARAMS, __PARAM_T, __FITNESS_T >;
     using particle_t = Particle< __NUM_PARAMS, __PARAM_T, __FITNESS_T >;
-    using param_t = __PARAM_T;
-    using fitness_t = __FITNESS_T;
+    using param_t    = __PARAM_T;
+    using fitness_t  = __FITNESS_T;
 
-    static constexpr param_t DEFAULT_MUTATION_FACTOR = 0.5;
+
+    static constexpr size_t  NUM_PARTICLES                 = __NUM_PARTICLES;
+    static constexpr param_t DEFAULT_MUTATION_FACTOR       = 0.5;
     static constexpr param_t DEFAULT_CROSSOVER_PROBABILITY = 0.7;
+
+
 
     // Constructor
     DifferentialEvolution( const param_t lowerBound[__NUM_PARAMS], const param_t upperBound[__NUM_PARAMS], const int numThreads = 1 )
         : Base( lowerBound, upperBound, numThreads )
-        , mutation_{ DEFAULT_MUTATION_FACTOR }
+        , mutation_ { DEFAULT_MUTATION_FACTOR }
         , crossProb_{ DEFAULT_CROSSOVER_PROBABILITY }
     {
     }
@@ -31,7 +37,7 @@ public:
     // Destructor
     virtual ~DifferentialEvolution() {}
 
-    void setMutationFactor( const param_t mutation ) { mutation_ = mutation; }
+    void setMutationFactor( const param_t mutation )        { mutation_  = mutation; }
     void setCrossoverProbability( const param_t crossProb ) { crossProb_ = crossProb; }
 
 
@@ -41,9 +47,10 @@ protected:
     {
         // Mutation selection
         uint mutationIndices[3];
-        this->rng_->choice( mutationIndices, NUM_PARTICLES - 1, false );
+        this->rng_->choice( mutationIndices, NUM_PARTICLES, false );
 
-        const particle_t mutants[3] = {
+        const particle_t mutants[3] =
+        {
             this->particles_[mutationIndices[0]],
             this->particles_[mutationIndices[1]],
             this->particles_[mutationIndices[2]]
@@ -86,6 +93,6 @@ protected:
 
 }; // class DifferentialEvolution
 
-
+} // namespace MetaOpt
 
 #endif // DIFFERENTIAL_EVOLUTION_OPTIMIZATION_H

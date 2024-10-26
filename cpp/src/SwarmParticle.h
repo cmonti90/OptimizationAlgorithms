@@ -5,25 +5,41 @@
 
 #include <memory>
 
+
+namespace MetaOpt
+{
+
 template< size_t __NUM_PARAMS, typename __PARAM_T = double, typename __FITNESS_T = double >
 class SwarmParticle : public Particle< __NUM_PARAMS, __PARAM_T, __FITNESS_T >
 {
 public:
 
-    using Base = Particle< __NUM_PARAMS, __PARAM_T, __FITNESS_T >;
-    using param_t = __PARAM_T;
+    using Base      = Particle< __NUM_PARAMS, __PARAM_T, __FITNESS_T >;
+    using param_t   = __PARAM_T;
     using fitness_t = __FITNESS_T;
+
 
     // Constructor
     inline SwarmParticle()
         : Base()
         , velocity_{}
     {
-        std::memset( velocity_, static_cast< param_t >( 0 ), Base::NUM_PARAMS * sizeof( param_t ) );
+        std::memset( velocity_, 0, Base::NUM_PARAMS * sizeof( param_t ) );
     }
+
 
     // Destructor
     inline virtual ~SwarmParticle() {}
+
+
+    // Copy constructor
+    inline SwarmParticle( const param_t ( &other )[Base::NUM_PARAMS] )
+        : Base( other )
+        , velocity_{}
+    {
+        std::memset( velocity_, 0, Base::NUM_PARAMS * sizeof( param_t ) );
+    }
+
 
     // Copy constructor
     inline SwarmParticle( const SwarmParticle& other )
@@ -32,6 +48,21 @@ public:
     {
         std::memcpy( velocity_, other.velocity_, Base::NUM_PARAMS * sizeof( param_t ) );
     }
+
+
+    // Copy constructor
+    inline SwarmParticle( const std::initializer_list< param_t >& other )
+        : Base( other )
+        , velocity_{}
+    {
+        if ( other.size() != Base::NUM_PARAMS )
+        {
+            throw std::invalid_argument( "Initializer list size does not match number of parameters" );
+        }
+
+        std::memset( velocity_, 0, Base::NUM_PARAMS * sizeof( param_t ) );
+    }
+
 
     // Assignment operator
     inline SwarmParticle& operator=( const SwarmParticle& other )
@@ -54,5 +85,7 @@ public:
 
 
 }; // class SwarmParticle
+
+} // namespace MetaOpt
 
 #endif // SWARMPARTICLE_H
